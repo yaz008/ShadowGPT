@@ -1,9 +1,13 @@
 from os import listdir
+from re import findall
 from dataclasses import dataclass, field
+
 from pynput.keyboard import Key, KeyCode
 from j2pipeline import Prompt
 from plyer import notification
+
 from clipboard import Clipboard
+from handler.process import Process
 from root import PROJECT_ROOT
 
 AnyKey = Key | KeyCode
@@ -59,11 +63,13 @@ class KeyHandler:
         }.get(pressed_key, str())
 
     def __execute_command(self, command: str) -> None:
-        match command.split(sep=' '):
+        match findall(r'[a-z]+|[0-9]+|(?<=\").*(?=\")', command):
             case ['template' | 't', filename]:
                 template_path: str = f'{PROJECT_ROOT}\\prompts\\{filename}.j2'
                 if f'{filename}.j2' in listdir(f'{PROJECT_ROOT}\\prompts'):
                     self.__prompt = Prompt[str](path=template_path)
+            case ['process' | 'p', funcname, *args]:
+                self.__prompt.process = getattr(Process, funcname)(*args)
                  
     def __set_clipboard(self) -> None:
         with Clipboard() as clipboard:
