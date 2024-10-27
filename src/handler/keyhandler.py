@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from pynput.keyboard import Key, KeyCode
 from j2pipeline import Prompt
 from clipboard import Clipboard
+from root import PROJECT_ROOT
 
 AnyKey = Key | KeyCode
 
@@ -14,7 +15,7 @@ class KeyHandler:
     __prompt: Prompt[str] = field(init=False)
 
     def __post_init__(self) -> None:
-        self.__prompt = Prompt[str](path='prompts\\.j2')
+        self.__prompt = Prompt[str](path=f'{PROJECT_ROOT}\\prompts\\.j2')
 
     def __call__(self, pressed_key: AnyKey) -> None:
         match [pressed_key]:
