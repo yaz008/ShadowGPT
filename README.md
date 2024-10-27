@@ -40,17 +40,17 @@ ShadowGPT could be in 5 states: `inactive`, `waiting`, `message`, `command` and 
 
 **Transitions:**
 
-- (`DownKey`, `*` -> `exit`): stop the app
+- (`DownKey`, `*` -> `exit`): Stop the app
 
-- (`RightShift`, `inactive` -> `waiting`)
+- (`RightShift`, `inactive` -> `waiting`): Activate ShadowGPT
 
 - (`AnyKey`, `waiting` -> `message`): Write a message
 
-- (`/`, `waiting` -> `command`): activate command mode
+- (`/`, `waiting` -> `command`): Activate command mode
 
-- (`RightShift`, `message` -> `inactive`): send a message to GPT
+- (`RightShift`, `message` -> `inactive`): Send a message to GPT
 
-- (`RightShift`, `command` -> `inactive`): execute a command
+- (`RightShift`, `command` -> `inactive`): Execute a command
 
 Once a message is sent to GPT, the response will be copied to your clipboard, allowing you to access it using `Ctrl + V`
 
