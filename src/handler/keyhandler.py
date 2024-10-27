@@ -2,75 +2,73 @@ from os import listdir
 from re import findall
 from dataclasses import dataclass, field
 
-from pynput.keyboard import Key, KeyCode
 from j2pipeline import Prompt
-from plyer import notification
-
 from clipboard import Clipboard
 from handler.process import Process
+from handler.fsa import FSA, State, Transition
+from notifier import notify
+
+from pynput.keyboard import Key, KeyCode
 from root import PROJECT_ROOT
 
-AnyKey = Key | KeyCode
+from handler._types import AnyKey
 
 @dataclass(slots=True)
 class KeyHandler:
-    toggle: AnyKey
-    status: AnyKey
-    exit: AnyKey
-    __is_activated: bool = field(default=False, init=False)
-    __message: str = field(default=str(), init=False)
+    toggle_key: AnyKey
+    status_key: AnyKey
+    exit_key: AnyKey
+    __state: FSA = field(init=False)
+    __buffer: str = field(default=str(), init=False)
     __prompt: Prompt[str] = field(init=False)
 
     def __post_init__(self) -> None:
+        self.__state = FSA(toggle=self.toggle_key, exit=self.exit_key)
         self.__prompt = Prompt[str](path=f'{PROJECT_ROOT}\\prompts\\blank.j2')
 
     def __call__(self, pressed_key: AnyKey) -> None:
-        match [pressed_key]:
-            case [self.exit]: exit(code=0)
-            case [self.status]: self.__on_status()
-            case [self.toggle]: self.__on_toggle()
-            case _:
-                if self.__is_activated:
-                    self.__extend_message(pressed_key)
+        if pressed_key == self.status_key:
+            notify(title='Status', message=self.status)
+        match self.__state.update(key=pressed_key):
+            case Transition(_, State.EXIT):
+                exit(code=0)
+            case Transition(State.WAITING | State.MESSAGE, State.MESSAGE):
+                self.__extend_buffer(key=pressed_key)
+            case Transition(State.COMMAND, State.COMMAND):
+                self.__extend_buffer(key=pressed_key)
+            case Transition(State.MESSAGE, State.INACTIVE):
+                with Clipboard() as clipboard:
+                    try:
+                        clipboard.data = self.__prompt(prompt=self.__buffer)
+                    except UnicodeEncodeError:
+                        clipboard.data = 'UnicodeEncodeError'
+                self.__buffer = str()
+            case Transition(State.COMMAND, State.INACTIVE):
+                self.__execute_command()
+                self.__buffer = str()
 
-    def __on_status(self) -> None:
-        status: str = f'Activated: {self.__is_activated}\n'
-        status += f'Message: \"{self.__message[:120]}\"'
-        status += '...\n' if len(self.__message) > 120 else '\n'
-        notification.notify(
-            title='Status',
-            message=status,
-            app_name='ShadowGPT',
-            timeout=5
-        )
+    @property
+    def status(self) -> str:
+        result: str = f'Active: {self.__state.is_active}\n'
+        result += f'Buffer: \"{self.__buffer}\"'
+        return result
 
-    def __on_toggle(self) -> None:
-        if self.__is_activated and self.__message != str():
-            match self.__message[0]:
-                case '/': self.__execute_command(command=self.__message[1:])
-                case _: self.__set_clipboard()
-            self.__message = str()
-        self.__is_activated = not self.__is_activated
+    def __extend_buffer(self, key: AnyKey) -> None:
+        if key == Key.backspace:
+            self.__buffer = self.__buffer[:-1]
+        if isinstance(key, KeyCode):
+            self.__buffer += key.char
+        if key == Key.space:
+            self.__buffer += ' '
+        if key == Key.enter:
+            self.__buffer += '\n'
 
-    def __extend_message(self, pressed_key: AnyKey) -> None:
-        if pressed_key == Key.backspace:
-            self.__message = self.__message[:-1]
-        if isinstance(pressed_key, KeyCode):
-            self.__message += pressed_key.char
-        self.__message += {
-            Key.enter: '\n',
-            Key.space: ' '
-        }.get(pressed_key, str())
-
-    def __execute_command(self, command: str) -> None:
-        match findall(r'[a-z]+|[0-9]+|(?<=\").*(?=\")', command):
+    def __execute_command(self) -> None:
+        pattern: str = r'[a-z]+|[0-9]+|(?<=\").*(?=\")|(?<=\').*(?=\')'
+        match findall(pattern=pattern, string=self.__buffer):
             case ['template' | 't', filename]:
                 template_path: str = f'{PROJECT_ROOT}\\prompts\\{filename}.j2'
                 if f'{filename}.j2' in listdir(f'{PROJECT_ROOT}\\prompts'):
                     self.__prompt = Prompt[str](path=template_path)
             case ['process' | 'p', funcname, *args]:
                 self.__prompt.process = getattr(Process, funcname)(*args)
-
-    def __set_clipboard(self) -> None:
-        with Clipboard() as clipboard:
-            clipboard.data = self.__prompt(prompt=self.__message)
