@@ -36,7 +36,3 @@ class FSA:
         transition: Transition = Transition(self.state, self.__update_state(key))
         self.state = transition.new
         return transition
-    
-    @property
-    def is_active(self) -> bool:
-        return not (self.state == State.INACTIVE)

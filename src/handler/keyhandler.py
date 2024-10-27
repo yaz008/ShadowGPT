@@ -49,7 +49,7 @@ class KeyHandler:
 
     @property
     def status(self) -> str:
-        result: str = f'Active: {self.__state.is_active}\n'
+        result: str = f'State: {self.__state.state.name.capitalize()}\n'
         result += f'Buffer: \"{self.__buffer}\"'
         return result
 
