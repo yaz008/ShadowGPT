@@ -15,7 +15,7 @@ class KeyHandler:
     __prompt: Prompt[str] = field(init=False)
 
     def __post_init__(self) -> None:
-        self.__prompt = Prompt[str](path=f'{PROJECT_ROOT}\\prompts\\.j2')
+        self.__prompt = Prompt[str](path=f'{PROJECT_ROOT}\\prompts\\blank.j2')
 
     def __call__(self, pressed_key: AnyKey) -> None:
         match [pressed_key]:
