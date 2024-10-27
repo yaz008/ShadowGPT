@@ -6,6 +6,7 @@ from j2pipeline import Prompt
 from clipboard import Clipboard
 from handler.fsa import FSA, State, Transition
 from notifier import notify
+from loader import load_config
 
 from pynput.keyboard import Key, KeyCode
 from root import PROJECT_ROOT
@@ -14,14 +15,18 @@ from handler._types import AnyKey
 
 @dataclass(slots=True)
 class KeyHandler:
-    toggle_key: AnyKey
-    status_key: AnyKey
-    exit_key: AnyKey
+    toggle_key: AnyKey = field(init=False)
+    status_key: AnyKey = field(init=False)
+    exit_key: AnyKey = field(init=False)
     __state: FSA = field(init=False)
     __buffer: str = field(default=str(), init=False)
     __prompt: Prompt[str] = field(init=False)
 
     def __post_init__(self) -> None:
+        config: dict[str, str] = load_config()
+        self.toggle_key = Key[config['toggle']]
+        self.status_key = Key[config['status']]
+        self.exit_key = Key[config['exit']]
         self.__state = FSA(toggle=self.toggle_key, exit=self.exit_key)
         self.__prompt = Prompt[str](path=f'{PROJECT_ROOT}\\prompts\\blank.j2')
 
