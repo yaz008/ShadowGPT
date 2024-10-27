@@ -35,8 +35,8 @@ class KeyHandler:
 
     def __on_status(self) -> None:
         status: str = f'Activated: {self.__is_activated}\n'
-        status += f'Message: {self.__message[:20]}'
-        status += '...\n' if len(self.__message) > 20 else '\n'
+        status += f'Message: \"{self.__message[:120]}\"'
+        status += '...\n' if len(self.__message) > 120 else '\n'
         notification.notify(
             title='Status',
             message=status,
@@ -70,7 +70,7 @@ class KeyHandler:
                     self.__prompt = Prompt[str](path=template_path)
             case ['process' | 'p', funcname, *args]:
                 self.__prompt.process = getattr(Process, funcname)(*args)
-                 
+
     def __set_clipboard(self) -> None:
         with Clipboard() as clipboard:
             clipboard.data = self.__prompt(prompt=self.__message)
