@@ -62,9 +62,15 @@ If your message starts with a `/`, it will be interpreted as a command
 
 ### Customization
 
+#### Prompts
+
 You can create custom prompt templates inside the `prompts` folder
 
 The templates should be in `.j2` format with a `{% PROMPT %}` substitution
+
+#### Keys
+
+To change default keys, adjust corresponding values in `config.json` file
 
 ## License
 
