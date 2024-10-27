@@ -4,7 +4,6 @@ from dataclasses import dataclass, field
 
 from j2pipeline import Prompt
 from clipboard import Clipboard
-from handler.process import Process
 from handler.fsa import FSA, State, Transition
 from notifier import notify
 
@@ -70,5 +69,3 @@ class KeyHandler:
                 template_path: str = f'{PROJECT_ROOT}\\prompts\\{filename}.j2'
                 if f'{filename}.j2' in listdir(f'{PROJECT_ROOT}\\prompts'):
                     self.__prompt = Prompt[str](path=template_path)
-            case ['process' | 'p', funcname, *args]:
-                self.__prompt.process = getattr(Process, funcname)(*args)
