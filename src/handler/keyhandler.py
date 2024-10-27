@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from pynput.keyboard import Key, KeyCode, HotKey
+from pynput.keyboard import Key, KeyCode
 from j2pipeline import Prompt
 from clipboard import Clipboard
 
