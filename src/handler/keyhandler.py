@@ -1,8 +1,9 @@
+from os import listdir
 from dataclasses import dataclass, field
 from pynput.keyboard import Key, KeyCode
 from j2pipeline import Prompt
+from plyer import notification
 from clipboard import Clipboard
-from os import listdir
 from root import PROJECT_ROOT
 
 AnyKey = Key | KeyCode
@@ -10,6 +11,7 @@ AnyKey = Key | KeyCode
 @dataclass(slots=True)
 class KeyHandler:
     toggle: AnyKey
+    status: AnyKey
     exit: AnyKey
     __is_activated: bool = field(default=False, init=False)
     __message: str = field(default=str(), init=False)
@@ -21,10 +23,22 @@ class KeyHandler:
     def __call__(self, pressed_key: AnyKey) -> None:
         match [pressed_key]:
             case [self.exit]: exit(code=0)
+            case [self.status]: self.__on_status()
             case [self.toggle]: self.__on_toggle()
             case _:
                 if self.__is_activated:
                     self.__extend_message(pressed_key)
+
+    def __on_status(self) -> None:
+        status: str = f'Activated: {self.__is_activated}\n'
+        status += f'Message: {self.__message[:20]}'
+        status += '...\n' if len(self.__message) > 20 else '\n'
+        notification.notify(
+            title='Status',
+            message=status,
+            app_name='ShadowGPT',
+            timeout=5
+        )
 
     def __on_toggle(self) -> None:
         if self.__is_activated and self.__message != str():
