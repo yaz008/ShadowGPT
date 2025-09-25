@@ -8,7 +8,7 @@ First, copy this repository
 git clone https://github.com/yaz008/ShadowGPT.git
 ```
 
-Create Python 3.12 virtual environment and run
+Create Python 3.10 virtual environment and run
 
 ```sh
 pip install -r requirements.txt
